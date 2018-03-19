@@ -9,7 +9,7 @@
 import UIKit
 import CoreData
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: UITableViewController{
     
     var itemArray = [Item]()
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
@@ -100,7 +100,7 @@ class TodoListViewController: UITableViewController {
     
     //MARK - Model Manipulation
     func saveItems(){
-        //        this function is called everytime u are making changes in data 
+        //        this function is called everytime u are making changes in data
         do{
             try context.save()
         }catch {
@@ -110,15 +110,51 @@ class TodoListViewController: UITableViewController {
         self.todoeyTableView.reloadData()
     }
     
-    func loadItems(){
-        let request: NSFetchRequest<Item> = Item.fetchRequest()
+    func loadItems(with requestParams:NSFetchRequest<Item> = Item.fetchRequest()){
+//         requestParams:NSFetchRequest<Item> = Item.fetchRequest() using = Item.FetchRequest allows function to take default values if not passed upon calling
+//        so if we call this method without request params it will take Item.fetchRequest as default
+//        this method has 1 . external parameter using with, 2. internal parameter 3. with a default value
         do {
-            itemArray = try context.fetch(request)
+            itemArray = try context.fetch(requestParams)
             self.todoeyTableView.reloadData()
         }catch{
             print("error fetching data \(error)")
         }
     }
+}
+
+//MARK: Search bar methods
+extension TodoListViewController: UISearchBarDelegate{
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        
+//        now we are going to QUERY THE REQUEST
+//        cd makes the query insensitive
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        loadItems(with: request)
+        print(searchBar.text!)
+    }
     
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            loadItems()
+            DispatchQueue.main.async {
+                // to remove keyboard on the main thread when the typed word is nill
+                searchBar.resignFirstResponder()
+            }
+            
+        }else{
+            let request: NSFetchRequest<Item> = Item.fetchRequest()
+            
+            //        now we are going to QUERY THE REQUEST
+            //        cd makes the query insensitive
+            request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+            request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+            loadItems(with: request)
+            print(searchBar.text!)
+        }
+        
+    }
 }
 
