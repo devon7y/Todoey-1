@@ -7,13 +7,12 @@
 //
 
 import UIKit
+import CoreData
 
 class TodoListViewController: UITableViewController {
     
     var itemArray = [Item]()
-    //    let defaults = UserDefaults.standard // we weill not use the defaults but will create our own and use them
-    
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     @IBOutlet var todoeyTableView: UITableView!
     
@@ -24,7 +23,7 @@ class TodoListViewController: UITableViewController {
         //        todoeyTableView.dataSource = self
         //        todoeyTableView.register(UINib(nibName:"TodoeyCell",bundle:nil), forCellReuseIdentifier: "todoeyCell")
         
-        print(dataFilePath!)
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
         //        if let items = UserDefaults.standard.array(forKey: "ToDoListArray") as? [Item]{
         //            itemArray = items
@@ -56,6 +55,14 @@ class TodoListViewController: UITableViewController {
         print(itemArray[indexPath.row])
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         tableView.cellForRow(at: indexPath)?.accessoryType = itemArray[indexPath.row].done ? .checkmark : .none
+        
+        //        for update operations you can use the following statement as well but us still need to call context.save
+        //        itemArray[indexPath.row].setValue("My value to be set on update", forKey: "title")
+        
+        //        to delete use following statement
+        //        context.delete(itemArray[indexPath.row]) // removes item from context and should be called first before deleting the same data from the row to avoaid exceptions indexo
+        //        itemArray.remove(at: indexPath.row)  // removes items from the item array to refresh the data
+        
         self.saveItems()
         tableView.deselectRow(at: indexPath , animated: true)
     }
@@ -68,9 +75,9 @@ class TodoListViewController: UITableViewController {
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (acttion) in
             // What will happen when user presses the add item button on alert
-            let newItem=Item()
+            let newItem = Item(context: self.context)
             newItem.title = textField.text!
-            
+            newItem.done = false
             self.itemArray.append(newItem)
             
             // AddData to defaults persitent storage
@@ -91,30 +98,26 @@ class TodoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    //MARK - Model Manipulation
     func saveItems(){
-        let encoder = PropertyListEncoder()
+        //        this function is called everytime u are making changes in data 
         do{
-            let data = try encoder.encode(self.itemArray) // first we will encode our data
-            try data.write(to: self.dataFilePath!)
+            try context.save()
         }catch {
-            print("Error encoding item array, \(error)")
+            print("Error saving context \(error)")
         }
         
         self.todoeyTableView.reloadData()
     }
     
     func loadItems(){
-        
-            if let data = try? Data(contentsOf: self.dataFilePath!){
-                let decoder = PropertyListDecoder()
-                do {
-                    itemArray = try decoder.decode([Item].self, from: data)
-                }catch {
-                    print("Error loading item array, \(error)")
-                }
-            }
-            
-        
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        do {
+            itemArray = try context.fetch(request)
+            self.todoeyTableView.reloadData()
+        }catch{
+            print("error fetching data \(error)")
+        }
     }
     
 }
