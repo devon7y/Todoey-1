@@ -99,6 +99,7 @@ class TodoListViewController: UITableViewController {
         }catch {
             print("Error encoding item array, \(error)")
         }
+        
         self.todoeyTableView.reloadData()
     }
     
