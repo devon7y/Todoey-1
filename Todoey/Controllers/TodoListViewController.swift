@@ -12,6 +12,12 @@ import CoreData
 class TodoListViewController: UITableViewController{
     
     var itemArray = [Item]()
+    var selectedCategory:Category?{
+        didSet{
+            // we will load items here when the value of category is set 
+            loadItems()
+        }
+    }
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     @IBOutlet var todoeyTableView: UITableView!
@@ -28,7 +34,6 @@ class TodoListViewController: UITableViewController{
         //        if let items = UserDefaults.standard.array(forKey: "ToDoListArray") as? [Item]{
         //            itemArray = items
         //        }
-        loadItems()
     }
     
     override func didReceiveMemoryWarning() {
@@ -78,6 +83,7 @@ class TodoListViewController: UITableViewController{
             let newItem = Item(context: self.context)
             newItem.title = textField.text!
             newItem.done = false
+            newItem.parentCategory = self.selectedCategory
             self.itemArray.append(newItem)
             
             // AddData to defaults persitent storage
@@ -110,16 +116,27 @@ class TodoListViewController: UITableViewController{
         self.todoeyTableView.reloadData()
     }
     
-    func loadItems(with requestParams:NSFetchRequest<Item> = Item.fetchRequest()){
+    func loadItems(with requestParams:NSFetchRequest<Item> = Item.fetchRequest(),predicate: NSPredicate? = nil){
 //         requestParams:NSFetchRequest<Item> = Item.fetchRequest() using = Item.FetchRequest allows function to take default values if not passed upon calling
 //        so if we call this method without request params it will take Item.fetchRequest as default
 //        this method has 1 . external parameter using with, 2. internal parameter 3. with a default value
+//        in order to load items related to a specific category we need to filter the items , therefore we NEED TO CREATE A NSPREDICATE
+        let categoryPredicate = NSPredicate(format: "parentCategory.attribute MATCHES %@", selectedCategory!.attribute!)
+//        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, predicate!])
+//        requestParams.predicate = compoundPredicate
+        if let additionalPredicate = predicate {
+            requestParams.predicate = NSCompoundPredicate.init(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        }else{
+            requestParams.predicate = categoryPredicate
+        }
+        
         do {
             itemArray = try context.fetch(requestParams)
-            self.todoeyTableView.reloadData()
+            
         }catch{
             print("error fetching data \(error)")
         }
+        tableView.reloadData()
     }
 }
 
@@ -130,9 +147,9 @@ extension TodoListViewController: UISearchBarDelegate{
         
 //        now we are going to QUERY THE REQUEST
 //        cd makes the query insensitive
-        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-        loadItems(with: request)
+        loadItems(with: request,predicate: predicate)
         print(searchBar.text!)
     }
     
@@ -149,9 +166,9 @@ extension TodoListViewController: UISearchBarDelegate{
             
             //        now we are going to QUERY THE REQUEST
             //        cd makes the query insensitive
-            request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+            let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
             request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-            loadItems(with: request)
+            loadItems(with: request, predicate: predicate)
             print(searchBar.text!)
         }
         
