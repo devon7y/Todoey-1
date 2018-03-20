@@ -109,37 +109,26 @@ class TodoListViewController: UITableViewController{
     }
 }
 //MARK: Search bar methods
-//extension TodoListViewController: UISearchBarDelegate{
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-//        let request: NSFetchRequest<Item> = Item.fetchRequest()
-//
-////        now we are going to QUERY THE REQUEST
-////        cd makes the query insensitive
-//        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-//        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-//        loadItems(with: request,predicate: predicate)
-//        print(searchBar.text!)
-//    }
-//
-//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-//        if searchBar.text?.count == 0 {
-//            loadItems()
-//            DispatchQueue.main.async {
-//                // to remove keyboard on the main thread when the typed word is nill
-//                searchBar.resignFirstResponder()
-//            }
-//
-//        }else{
-//            let request: NSFetchRequest<Item> = Item.fetchRequest()
-//
-//            //        now we are going to QUERY THE REQUEST
-//            //        cd makes the query insensitive
-//            let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-//            request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-//            loadItems(with: request, predicate: predicate)
-//            print(searchBar.text!)
-//        }
-//
-//    }
-//}
-//
+extension TodoListViewController: UISearchBarDelegate{
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        itemResults = itemResults?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "title",ascending:true)
+        print(searchBar.text!)
+    }
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            loadItems()
+            DispatchQueue.main.async {
+                // to remove keyboard on the main thread when the typed word is nill
+                searchBar.resignFirstResponder()
+            }
+        }else{
+            itemResults = itemResults?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "date",ascending:true)
+            self.todoeyTableView.reloadData()
+            print(searchBar.text!)
+        }
+
+    }
+}
+
+
