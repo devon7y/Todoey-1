@@ -87,14 +87,16 @@ class TodoListViewController: UITableViewController{
         if let item = itemResults?[indexPath.row]{
             do {
                 try realm.write {
-                    item.done = !item.done
+//                    item.done = !item.done
+//                    TO DELETE AN ITEM SIMPLY UNCOMMENT FOLLOEINF STATEMENT
+                    realm.delete(item)
                 }
             }catch{
                 print("Error updating done status \(error)")
             }
             
-            tableView.cellForRow(at: indexPath)?.accessoryType = item.done ? .checkmark : .none
-            tableView.deselectRow(at: indexPath , animated: true)
+//            tableView.cellForRow(at: indexPath)?.accessoryType = item.done ? .checkmark : .none
+//            tableView.deselectRow(at: indexPath , animated: true)
             tableView.reloadData()
         }
         
