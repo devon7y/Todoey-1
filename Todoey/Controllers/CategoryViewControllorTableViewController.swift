@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class CategoryViewControllorTableViewController: SwipeTableViewController {
     @IBOutlet var todoeyCategoryTable: UITableView!
@@ -21,6 +22,7 @@ class CategoryViewControllorTableViewController: SwipeTableViewController {
         super.viewDidLoad()
         todoeyCategoryTable.rowHeight = 80
         loadCategories()
+        tableView.separatorStyle = .none
     }
     
     
@@ -30,6 +32,7 @@ class CategoryViewControllorTableViewController: SwipeTableViewController {
         let action = UIAlertAction.init(title: "Add", style: .default) { (action) in
             let newCategory = Category()
             newCategory.attribute = textField.text!
+            newCategory.color = UIColor.randomFlat.hexValue()
             //            since categoryArray is of result type ,realm is going to auto update it so no need to append
             //            self.categoryArray.append(newCategory)
             self.saveItems(category: newCategory)
@@ -46,7 +49,12 @@ class CategoryViewControllorTableViewController: SwipeTableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         //        the following line will be tapping int o cell view defined in swipetableviewcontroller calss
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        cell.textLabel?.text = categoryArray?[indexPath.row].attribute ?? "No Categories added yet"
+        if let category = categoryArray?[indexPath.row]{
+        cell.textLabel?.text = category.attribute ?? "No Categories added yet"
+        cell.backgroundColor = UIColor(hexString: category.color ?? UIColor.randomFlat.hexValue())
+            cell.textLabel?.textColor = ContrastColorOf(cell.backgroundColor!, returnFlat: true)
+
+        }
         return cell
     }
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
