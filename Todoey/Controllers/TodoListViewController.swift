@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class TodoListViewController: UITableViewController{
+class TodoListViewController: SwipeTableViewController{
     let realm = try! Realm()
     var itemResults: Results<Item>?
     var selectedCategory:Category?{
@@ -59,14 +59,10 @@ class TodoListViewController: UITableViewController{
         super.viewDidLoad()
     }
     
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
     
     //    MARK : tableview datasource methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         if let item = itemResults?[indexPath.row]{
             cell.textLabel?.text = item.title
             cell.accessoryType = item.done ? .checkmark : .none
@@ -87,25 +83,37 @@ class TodoListViewController: UITableViewController{
         if let item = itemResults?[indexPath.row]{
             do {
                 try realm.write {
-//                    item.done = !item.done
+                    item.done = !item.done
 //                    TO DELETE AN ITEM SIMPLY UNCOMMENT FOLLOEINF STATEMENT
-                    realm.delete(item)
+//                    realm.delete(item)
                 }
             }catch{
                 print("Error updating done status \(error)")
             }
             
-//            tableView.cellForRow(at: indexPath)?.accessoryType = item.done ? .checkmark : .none
-//            tableView.deselectRow(at: indexPath , animated: true)
+            tableView.cellForRow(at: indexPath)?.accessoryType = item.done ? .checkmark : .none
+            tableView.deselectRow(at: indexPath , animated: true)
             tableView.reloadData()
         }
         
     }
     //MARK - Model Manipulation
-    
     func loadItems(){
         itemResults = selectedCategory?.items.sorted(byKeyPath: "title",ascending: true)
         tableView.reloadData()
+    }
+    
+    //MARK: DELETE DATA from swipe
+    override func updateModel(at indexPath: IndexPath) {
+        if let item = self.itemResults?[indexPath.row] {
+            do{
+                try self.realm.write {
+                    self.realm.delete(item)
+                }
+            }catch {
+                print("Error Deleteing data \(error)")
+            }
+        }
     }
 }
 //MARK: Search bar methods

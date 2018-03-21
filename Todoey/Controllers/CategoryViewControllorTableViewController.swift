@@ -8,9 +8,8 @@
 
 import UIKit
 import RealmSwift
-import SwipeCellKit
 
-class CategoryViewControllorTableViewController: UITableViewController {
+class CategoryViewControllorTableViewController: SwipeTableViewController {
     @IBOutlet var todoeyCategoryTable: UITableView!
     
     let realm = try! Realm()
@@ -45,9 +44,9 @@ class CategoryViewControllorTableViewController: UITableViewController {
     
     //MARK: Tabel view data source methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell",for: indexPath) as! SwipeTableViewCell
+        //        the following line will be tapping int o cell view defined in swipetableviewcontroller calss
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         cell.textLabel?.text = categoryArray?[indexPath.row].attribute ?? "No Categories added yet"
-        cell.delegate = self
         return cell
     }
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -82,43 +81,25 @@ class CategoryViewControllorTableViewController: UITableViewController {
         categoryArray = realm.objects(Category.self)
     }
     
-}
-
-//MARK: Swipe cell delegat methods
-extension  CategoryViewControllorTableViewController: SwipeTableViewCellDelegate {
-    
-    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
-        guard orientation == .right else { return nil }
-        
-        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { action, indexPath in
-            // handle action by updating model with deletion
-            if let category = self.categoryArray?[indexPath.row] {
-                do{
-                    try self.realm.write {
-                        for item in category.items {
-                            self. realm.delete(item)  //remove all child items. But app crashes
-                        }
-                        self.realm.delete(category)
-
+    //MARK: DELETE DATA from swipe
+    override func updateModel(at indexPath: IndexPath) {
+//        to execute the code in the super class method first u need to call
+        super.updateModel(at: indexPath)
+//       after above execution following code is going to get exceuted
+        if let category = self.categoryArray?[indexPath.row] {
+            do{
+                try self.realm.write {
+                    for item in category.items {
+                        self.realm.delete(item)  //remove all child items. But app crashes
                     }
-                }catch {
-                    print("Error Deleteing data \(error)")
+                    self.realm.delete(category)
+                    
                 }
+            }catch {
+                print("Error Deleteing data \(error)")
             }
         }
-        
-        // customize the action appearance
-        deleteAction.image = UIImage(named: "delete")
-        
-        return [deleteAction]
     }
     
-    
-    //MARK: customise swipe options here
-    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeTableOptions {
-        var options = SwipeTableOptions()
-        options.expansionStyle = .destructive
-        options.transitionStyle = .border
-        return options
-    }
 }
+
