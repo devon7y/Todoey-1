@@ -50,10 +50,10 @@ class CategoryViewControllorTableViewController: SwipeTableViewController {
         //        the following line will be tapping int o cell view defined in swipetableviewcontroller calss
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         if let category = categoryArray?[indexPath.row]{
-        cell.textLabel?.text = category.attribute ?? "No Categories added yet"
-        cell.backgroundColor = UIColor(hexString: category.color ?? UIColor.randomFlat.hexValue())
+            cell.textLabel?.text = category.attribute ?? "No Categories added yet"
+            cell.backgroundColor = UIColor(hexString: category.color ?? UIColor.randomFlat.hexValue())
             cell.textLabel?.textColor = ContrastColorOf(cell.backgroundColor!, returnFlat: true)
-
+            
         }
         return cell
     }
@@ -91,9 +91,9 @@ class CategoryViewControllorTableViewController: SwipeTableViewController {
     
     //MARK: DELETE DATA from swipe
     override func updateModel(at indexPath: IndexPath) {
-//        to execute the code in the super class method first u need to call
+        //        to execute the code in the super class method first u need to call
         super.updateModel(at: indexPath)
-//       after above execution following code is going to get exceuted
+        //       after above execution following code is going to get exceuted
         if let category = self.categoryArray?[indexPath.row] {
             do{
                 try self.realm.write {

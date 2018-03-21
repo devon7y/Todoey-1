@@ -15,9 +15,38 @@ class TodoListViewController: SwipeTableViewController{
     var itemResults: Results<Item>?
     var selectedCategory:Category?{
         didSet{
-            // we will load items here when the value of category is set 
+            // we will load items here w    hen the value of category is set
             loadItems()
         }
+    }
+    
+    
+    @IBOutlet weak var searchBar: UISearchBar!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        tableView.separatorStyle = .none
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        guard let colorHex = selectedCategory?.color else { fatalError()}
+            title = selectedCategory?.attribute
+        updateNavBar(withHexCode: colorHex)
+    }
+    
+    //
+    override func viewWillDisappear(_ animated: Bool) {
+        updateNavBar(withHexCode: "9537FF")
+    }
+    
+    //    MARK: UPDATE NAV BAR METHOD
+    func updateNavBar(withHexCode colorHexCode:String){
+        guard let navBar = navigationController?.navigationBar else { fatalError("NAvigation controller not exist.")}
+        guard let navBarColor = UIColor(hexString: colorHexCode) else {fatalError()}
+        navBar.barTintColor = navBarColor
+        navBar.tintColor = ContrastColorOf(navBarColor, returnFlat: true)
+        navBar.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor : ContrastColorOf(navBarColor, returnFlat: true)]
+        searchBar.barTintColor = navBarColor
     }
     
     // MARK : BUTTON PRESS EVENT
@@ -56,10 +85,6 @@ class TodoListViewController: SwipeTableViewController{
     }
     @IBOutlet var todoeyTableView: UITableView!
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        tableView.separatorStyle = .none
-    }
     
     
     //    MARK : tableview datasource methods
@@ -68,7 +93,7 @@ class TodoListViewController: SwipeTableViewController{
         if let item = itemResults?[indexPath.row]{
             cell.textLabel?.text = item.title
             cell.accessoryType = item.done ? .checkmark : .none
-            if let color = UIColor(hexString:selectedCategory!.color)? .darken(byPercentage: CGFloat(CGFloat(indexPath.row)/CGFloat(itemResults!.count))){
+            if let color = UIColor(hexString:selectedCategory!.color)?.darken(byPercentage: CGFloat(CGFloat(indexPath.row)/CGFloat(itemResults!.count))){
                 cell.backgroundColor = color
                 cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
             }
@@ -90,8 +115,8 @@ class TodoListViewController: SwipeTableViewController{
             do {
                 try realm.write {
                     item.done = !item.done
-//                    TO DELETE AN ITEM SIMPLY UNCOMMENT FOLLOEINF STATEMENT
-//                    realm.delete(item)
+                    //                    TO DELETE AN ITEM SIMPLY UNCOMMENT FOLLOEINF STATEMENT
+                    //                    realm.delete(item)
                 }
             }catch{
                 print("Error updating done status \(error)")
@@ -128,7 +153,7 @@ extension TodoListViewController: UISearchBarDelegate{
         itemResults = itemResults?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "title",ascending:true)
         print(searchBar.text!)
     }
-
+    
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchBar.text?.count == 0 {
             loadItems()
@@ -141,7 +166,7 @@ extension TodoListViewController: UISearchBarDelegate{
             self.todoeyTableView.reloadData()
             print(searchBar.text!)
         }
-
+        
     }
 }
 
